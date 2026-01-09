@@ -1,0 +1,16 @@
+watch:
+  - path: "."
+    recursive: true
+    patterns:
+      - "*.txt"
+    ignore:
+      - "triggered.txt"
+    tasks:
+      - "hello"
+
+tasks:
+  hello:
+    command: "sh"
+    args:
+      - "-c"
+      - "echo 'Hello from WatchmanX' && touch triggered.txt"
