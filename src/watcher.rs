@@ -222,3 +222,36 @@ fn matches_rule(path: &PathBuf, rule: &crate::config::WatchRule) -> bool {
 
     true
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::WatchRule;
+
+    #[test]
+    fn test_matches_rule() {
+        let rule = WatchRule {
+            path: PathBuf::from("."),
+            recursive: true,
+            patterns: vec!["*.rs".to_string()],
+            ignore: vec!["target/*".to_string()],
+            tasks: vec![],
+        };
+
+        assert!(matches_rule(&PathBuf::from("src/main.rs"), &rule));
+        assert!(!matches_rule(&PathBuf::from("src/main.c"), &rule));
+        assert!(!matches_rule(&PathBuf::from("target/debug/main.rs"), &rule));
+    }
+
+    #[test]
+    fn test_matches_rule_empty_patterns() {
+        let rule = WatchRule {
+            path: PathBuf::from("."),
+            recursive: true,
+            patterns: vec![],
+            ignore: vec![],
+            tasks: vec![],
+        };
+
+        assert!(matches_rule(&PathBuf::from("any.file"), &rule));
+    }
+}

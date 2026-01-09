@@ -84,3 +84,45 @@ pub async fn manage(_args: ConfigArgs) -> Result<()> {
     println!("Current Configuration:\n{:#?}", config);
     Ok(())
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn test_default_config() {
+        let config = Config::default();
+        assert!(config.watch.is_empty());
+        assert!(config.tasks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_load_yaml_config() -> Result<()> {
+        let dir = tempdir()?;
+        let file_path = dir.path().join("watchmanx.yml");
+        let mut file = File::create(&file_path)?;
+        writeln!(
+            file,
+            "
+watch:
+  - path: .
+    recursive: true
+    patterns: ['*.rs']
+    ignore: ['target/*']
+    tasks: ['test']
+tasks:
+  test:
+    command: cargo
+    args: ['test']
+"
+        )?;
+
+        let config = load_config(Some(&file_path)).await?;
+        assert_eq!(config.watch.len(), 1);
+        assert_eq!(config.watch[0].patterns[0], "*.rs");
+        assert!(config.tasks.contains_key("test"));
+        Ok(())
+    }
+}

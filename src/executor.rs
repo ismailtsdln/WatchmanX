@@ -65,9 +65,19 @@ impl Executor {
     }
 }
 
-pub async fn manage_tasks(args: TaskArgs) -> Result<()> {
-    // TODO: Implement CRUD for tasks in config
-    println!("Task management not implemented yet: {:?}", args);
+pub async fn manage_tasks(_args: TaskArgs) -> Result<()> {
+    let config = load_config(None).await?;
+    println!("{}", "Available Tasks:".bright_cyan().bold());
+    if config.tasks.is_empty() {
+        println!("  No tasks defined in configuration.");
+    } else {
+        for (name, def) in &config.tasks {
+            println!("  - {}: {}", name.bright_green(), def.command);
+            for arg in &def.args {
+                println!("    {}", format!("  {}", arg).dimmed());
+            }
+        }
+    }
     Ok(())
 }
 
