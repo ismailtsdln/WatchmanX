@@ -12,7 +12,11 @@ use crate::cli::WatchArgs;
 use crate::config::{load_config, Config as AppConfig};
 use crate::executor::Executor;
 
-pub async fn run(args: WatchArgs, token: tokio_util::sync::CancellationToken) -> Result<()> {
+pub async fn run(
+    args: WatchArgs,
+    token: tokio_util::sync::CancellationToken,
+    server_tx: tokio::sync::broadcast::Sender<crate::server::DashboardEvent>,
+) -> Result<()> {
     // Load config
     let config = load_config(None).await?;
     info!(
@@ -75,6 +79,7 @@ pub async fn run(args: WatchArgs, token: tokio_util::sync::CancellationToken) ->
         &config_path,
         &reload_token,
         &token,
+        server_tx.clone(),
     )
     .await;
 
@@ -92,6 +97,7 @@ async fn process_events(
     config_path: &PathBuf,
     reload_token: &tokio_util::sync::CancellationToken,
     shutdown_token: &tokio_util::sync::CancellationToken,
+    server_tx: tokio::sync::broadcast::Sender<crate::server::DashboardEvent>,
 ) -> Result<()> {
     let mut pending_events = Vec::new();
     let debounce_duration = Duration::from_millis(500);
@@ -122,7 +128,7 @@ async fn process_events(
             _ = &mut sleep, if timer_active => {
                 timer_active = false;
                 let events = std::mem::take(&mut pending_events);
-                handle_batched_events(events, config, executor).await;
+                handle_batched_events(events, config, executor, server_tx.clone()).await;
             }
             else => break,
         }
@@ -130,7 +136,12 @@ async fn process_events(
     Ok(())
 }
 
-async fn handle_batched_events(events: Vec<Event>, config: &AppConfig, executor: &Executor) {
+async fn handle_batched_events(
+    events: Vec<Event>,
+    config: &AppConfig,
+    executor: &Executor,
+    server_tx: tokio::sync::broadcast::Sender<crate::server::DashboardEvent>,
+) {
     let mut rule_triggers: std::collections::HashMap<usize, Vec<PathBuf>> =
         std::collections::HashMap::new();
 
@@ -155,6 +166,13 @@ async fn handle_batched_events(events: Vec<Event>, config: &AppConfig, executor:
         unique_paths.sort();
         unique_paths.dedup();
         let paths_str = unique_paths.join(",");
+
+        // Send to Dashboard
+        let _ = server_tx.send(crate::server::DashboardEvent {
+            timestamp: chrono::Local::now().to_rfc3339(),
+            event_type: "File Change".to_string(), // Simplified
+            paths: unique_paths.clone(),
+        });
 
         info!(
             "{} events matched rule at {}. Triggering tasks: {:?}",

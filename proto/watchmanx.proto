@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package watchmanx;
+
+service WatchmanService {
+  rpc GetStatus (Empty) returns (StatusResponse);
+  rpc TriggerTask (TriggerRequest) returns (TriggerResponse);
+}
+
+message Empty {}
+
+message StatusResponse {
+  string version = 1;
+  uint32 rules_count = 2;
+  uint32 tasks_count = 3;
+}
+
+message TriggerRequest {
+  string task_name = 1;
+}
+
+message TriggerResponse {
+  bool success = 1;
+  string message = 2;
+}

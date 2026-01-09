@@ -2,6 +2,7 @@ mod cli;
 mod config;
 mod executor;
 mod logger;
+mod server;
 mod watcher;
 
 use anyhow::Result;
@@ -18,6 +19,17 @@ async fn main() -> Result<()> {
     let args = Cli::parse();
     info!("Starting {}", "WatchmanX".bright_cyan().bold());
 
+    // Initialize Dashboard State
+    let (server_tx, _) = tokio::sync::broadcast::channel(100);
+    let server_state = std::sync::Arc::new(server::ServerState {
+        tx: server_tx.clone(),
+    });
+    let dashboard_state = server_state.clone();
+
+    tokio::spawn(async move {
+        server::start(dashboard_state).await;
+    });
+
     let token = tokio_util::sync::CancellationToken::new();
     let cloned_token = token.clone();
 
@@ -32,7 +44,7 @@ async fn main() -> Result<()> {
         let result = match args.command.clone() {
             cli::Commands::Watch(cmd) => {
                 tokio::select! {
-                    res = watcher::run(cmd.clone(), token.clone()) => res,
+                    res = watcher::run(cmd.clone(), token.clone(), server_tx.clone()) => res,
                     _ = token.cancelled() => Ok(()),
                 }
             }

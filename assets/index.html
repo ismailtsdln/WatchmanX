@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WatchmanX Dashboard</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --card: #161b22;
+        --text: #c9d1d9;
+        --cyan: #00f2ff;
+        --magenta: #ff00ff;
+        --green: #238636;
+      }
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #30363d;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+      }
+      h1 {
+        color: var(--cyan);
+        margin: 0;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .status {
+        font-size: 14px;
+        color: var(--green);
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+      .card-header {
+        font-weight: bold;
+        color: var(--magenta);
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .event-item {
+        border-left: 3px solid var(--cyan);
+        padding-left: 10px;
+        margin-bottom: 10px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 13px;
+      }
+      .event-time {
+        color: #8b949e;
+        margin-right: 10px;
+      }
+      .event-paths {
+        color: #58a6ff;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>WatchmanX Dashboard</h1>
+      <div class="status" id="connection-status">CONNECTED</div>
+    </header>
+
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          REAL-TIME EVENTS
+          <span id="event-count">0</span>
+        </div>
+        <div id="events-list">
+          <!-- Events will appear here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const eventsList = document.getElementById("events-list");
+      const eventCountSpan = document.getElementById("event-count");
+      const statusDiv = document.getElementById("connection-status");
+      let count = 0;
+
+      const eventSource = new EventSource("/events");
+
+      eventSource.onopen = () => {
+        statusDiv.textContent = "CONNECTED";
+        statusDiv.style.color = "var(--green)";
+      };
+
+      eventSource.onerror = () => {
+        statusDiv.textContent = "DISCONNECTED";
+        statusDiv.style.color = "#f85149";
+      };
+
+      eventSource.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        count++;
+        eventCountSpan.textContent = count;
+
+        const item = document.createElement("div");
+        item.className = "event-item";
+
+        const time = new Date(data.timestamp).toLocaleTimeString();
+
+        item.innerHTML = `
+                <span class="event-time">[${time}]</span>
+                <span class="event-type">${data.event_type}:</span>
+                <span class="event-paths">${data.paths.join(", ")}</span>
+            `;
+
+        eventsList.prepend(item);
+        if (eventsList.children.length > 50) {
+          eventsList.removeChild(eventsList.lastChild);
+        }
+      };
+    </script>
+  </body>
+</html>
