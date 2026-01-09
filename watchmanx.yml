@@ -11,3 +11,7 @@ tasks:
     args:
       - "Hello from WatchmanX!"
 max_concurrent_tasks: 5
+  bye:
+    command: echo
+    args:
+      - "Goodbye from WatchmanX!"

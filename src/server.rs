@@ -10,7 +10,7 @@ use std::{convert::Infallible, sync::Arc, time::Duration};
 use tokio::sync::broadcast;
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt as _;
-use tracing::info;
+use tracing::{error, info};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DashboardEvent {
@@ -33,17 +33,17 @@ pub async fn start(state: Arc<ServerState>) {
         .fallback_service(ServeDir::new("assets"))
         .with_state(state);
 
-    let listener = match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
+    let listener = match tokio::net::TcpListener::bind("0.0.0.0:8081").await {
         Ok(l) => l,
         Err(e) => {
             error!(
-                "Failed to bind Web Dashboard to port 8080: {}. Is it already in use?",
+                "Failed to bind Web Dashboard to port 8081: {}. Is it already in use?",
                 e
             );
             return;
         }
     };
-    info!("Web Dashboard available at http://localhost:8080");
+    info!("Web Dashboard available at http://localhost:8081");
     if let Err(e) = axum::serve(listener, app).await {
         error!("Web Dashboard server error: {:?}", e);
     }

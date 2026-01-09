@@ -1,4 +1,4 @@
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s
      Running `target/debug/watchmanx watch test_watch`
 
     __      __         _         _                               __   __
@@ -10,10 +10,14 @@
     
     Advanced File Watching & Automation v0.1.0
 
-[2m2026-01-09T11:52:49.082313Z[0m [32m INFO[0m Starting WatchmanX
-
-thread 'tokio-runtime-worker' (19795111) panicked at src/server.rs:36:72:
-called `Result::unwrap()` on an `Err` value: Os { code: 48, kind: AddrInUse, message: "Address already in use" }
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-[2m2026-01-09T11:52:49.087199Z[0m [32m INFO[0m gRPC Server listening on 0.0.0.0:50051
-[2m2026-01-09T11:52:49.088050Z[0m [31mERROR[0m Error: watch[0]: missing field `ignore` at line 2 column 5
+[2m2026-01-09T11:57:15.135576Z[0m [32m INFO[0m Starting WatchmanX
+[2m2026-01-09T11:57:15.139021Z[0m [32m INFO[0m gRPC Server listening on 0.0.0.0:50051
+[2m2026-01-09T11:57:15.139097Z[0m [32m INFO[0m Web Dashboard available at http://localhost:8081
+[2m2026-01-09T11:57:15.139666Z[0m [32m INFO[0m Loaded configuration with 1 watch rules
+[2m2026-01-09T11:57:15.140398Z[0m [32m INFO[0m Starting file watcher on paths: ["test_watch"]
+[2m2026-01-09T11:57:15.144152Z[0m [32m INFO[0m Watching "test_watch"
+[2m2026-01-09T11:57:15.144955Z[0m [32m INFO[0m Watching config for hot-reload: "watchmanx.yml"
+[2m2026-01-09T11:57:19.366061Z[0m [32m INFO[0m 1 events matched rule at test_watch. Triggering tasks: ["hello"]
+[2m2026-01-09T11:57:19.366385Z[0m [32m INFO[0m [1mrun_task[0m[1m{[0m[3mtask_name[0m[2m=[0m"hello" [3mcmd[0m[2m=[0mecho[1m}[0m[2m:[0m Starting task: hello
+Hello from WatchmanX!
+[2m2026-01-09T11:57:19.380925Z[0m [32m INFO[0m [1mrun_task[0m[1m{[0m[3mtask_name[0m[2m=[0m"hello" [3mcmd[0m[2m=[0mecho[1m}[0m[2m:[0m Task hello completed successfully

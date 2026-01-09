@@ -1,0 +1,21 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.35s
+     Running `target/debug/watchmanx watch test_watch`
+
+    __      __         _         _                               __   __
+    \ \    / /        | |       | |                              \ \ / /
+     \ \  / /_ _ _ ___| |__  _ _| | __ _ _ _  __  __   _____  __ \   / 
+      \ \/ / _` | ' __| '_ \| ' | |/ _` | ' \|  \/  | / _ \ \/ / /   \ 
+       \  / (_| | |   | | | | | | | (_| | | | | |  | | | (_| >  < / / \ \
+        \/ \__,_|_|   |_| |_|_| |_|\__,_|_| |_|_|  |_| \__/_/\_\/_/   \_\
+    
+    Advanced File Watching & Automation v0.1.0
+
+[2m2026-01-09T11:57:33.499121Z[0m [32m INFO[0m Starting WatchmanX
+[2m2026-01-09T11:57:33.501540Z[0m [32m INFO[0m gRPC Server listening on 0.0.0.0:50051
+[2m2026-01-09T11:57:33.501626Z[0m [32m INFO[0m Web Dashboard available at http://localhost:8081
+[2m2026-01-09T11:57:33.502041Z[0m [32m INFO[0m Loaded configuration with 1 watch rules
+[2m2026-01-09T11:57:33.502592Z[0m [32m INFO[0m Starting file watcher on paths: ["test_watch"]
+[2m2026-01-09T11:57:33.505471Z[0m [32m INFO[0m Watching "test_watch"
+[2m2026-01-09T11:57:33.506119Z[0m [32m INFO[0m Watching config for hot-reload: "watchmanx.yml"
+[2m2026-01-09T11:57:35.375625Z[0m [32m INFO[0m Config change detected. Reloading...
+[2m2026-01-09T11:57:35.378045Z[0m [31mERROR[0m Error: max_concurrent_tasks: invalid type: string "5 bye", expected usize at line 13 column 23
