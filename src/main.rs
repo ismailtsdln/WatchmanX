@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     });
 
     loop {
-        let result = match args.command {
+        let result = match args.command.clone() {
             cli::Commands::Watch(cmd) => {
                 tokio::select! {
                     res = watcher::run(cmd.clone(), token.clone()) => res,

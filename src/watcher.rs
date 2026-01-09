@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use glob::Pattern;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::time::Duration;
@@ -69,7 +68,15 @@ pub async fn run(args: WatchArgs, token: tokio_util::sync::CancellationToken) ->
 
     // We need to return an error if RELOAD is needed
     let reload_token = tokio_util::sync::CancellationToken::new();
-    let res = process_events(&mut rx, &config, &executor, &config_path, &reload_token).await;
+    let res = process_events(
+        &mut rx,
+        &config,
+        &executor,
+        &config_path,
+        &reload_token,
+        &token,
+    )
+    .await;
 
     if reload_token.is_cancelled() {
         return Err(anyhow::anyhow!("RELOAD_CONFIG"));
@@ -84,6 +91,7 @@ async fn process_events(
     executor: &Executor,
     config_path: &PathBuf,
     reload_token: &tokio_util::sync::CancellationToken,
+    shutdown_token: &tokio_util::sync::CancellationToken,
 ) -> Result<()> {
     let mut pending_events = Vec::new();
     let debounce_duration = Duration::from_millis(500);
@@ -94,6 +102,10 @@ async fn process_events(
 
     loop {
         tokio::select! {
+            _ = shutdown_token.cancelled() => {
+                info!("Watcher cancelling...");
+                return Ok(());
+            }
             Some(event) = rx.recv() => {
                 if !event.kind.is_access() {
                     // Check if config file was changed

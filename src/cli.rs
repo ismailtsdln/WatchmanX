@@ -9,7 +9,7 @@ pub struct Cli {
     pub command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Start watching given paths
     Watch(WatchArgs),
