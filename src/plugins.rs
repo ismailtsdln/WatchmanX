@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::path::Path;
 use wasmer::{imports, Instance, Module, Store, Value};
 

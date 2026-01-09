@@ -106,16 +106,6 @@ WatchmanX uses a "sliding window" for events. If multiple changes occur within 5
 ### Hot-Reloading
 If you modify your `watchmanx.yml` or `.json` configuration file, WatchmanX will automatically detect the change, reload its internal state, and restart the watcher threads with the new rules—all without dropping the process.
 
-## 🗺️ Roadmap
-
-- [x] High-performance Async Watcher
-- [x] Configurable Debouncing
-- [x] Config Hot-Reload
-- [x] Environment Variable Context
-- [ ] Plugin Support (WASM-based event filters)
-- [ ] Web-based Monitoring Dashboard
-- [ ] Remote Task Execution via gRPC
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
