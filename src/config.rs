@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tokio::fs;
 
 use crate::cli::ConfigArgs;
@@ -78,7 +78,7 @@ pub async fn load_config(path: Option<&PathBuf>) -> Result<Config> {
     Ok(config)
 }
 
-pub async fn manage(args: ConfigArgs) -> Result<()> {
+pub async fn manage(_args: ConfigArgs) -> Result<()> {
     // For now, just print the current config
     let config = load_config(None).await?;
     println!("Current Configuration:\n{:#?}", config);
