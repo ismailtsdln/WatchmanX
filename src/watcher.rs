@@ -29,7 +29,15 @@ pub async fn run(
     // Executor is passed from main
     // Identify config path to watch for hot-reload
     // For simplicity, let's assume it's one of the defaults if not specified
-    let config_path = PathBuf::from("watchmanx.yml"); // Simplified for now
+    let config_path = PathBuf::from("watchmanx.yml"); // Initialize Plugin Engine (Roadmap)
+    let mut plugin_engine = crate::plugins::PluginEngine::new();
+    if let Some(plugin_path) = &args.plugin {
+        if let Err(e) = plugin_engine.load_plugin(plugin_path) {
+            error!("Failed to load WASM plugin: {:?}", e);
+        } else {
+            info!("Successfully loaded WASM plugin from {:?}", plugin_path);
+        }
+    }
 
     info!("Starting file watcher on paths: {:?}", args.paths);
 
@@ -80,6 +88,7 @@ pub async fn run(
         &reload_token,
         &token,
         server_tx.clone(),
+        plugin_engine,
     )
     .await;
 
@@ -98,6 +107,7 @@ async fn process_events(
     reload_token: &tokio_util::sync::CancellationToken,
     shutdown_token: &tokio_util::sync::CancellationToken,
     server_tx: tokio::sync::broadcast::Sender<crate::server::DashboardEvent>,
+    mut plugin_engine: crate::plugins::PluginEngine,
 ) -> Result<()> {
     let mut pending_events = Vec::new();
     let debounce_duration = Duration::from_millis(500);
@@ -120,9 +130,21 @@ async fn process_events(
                         return Ok(());
                     }
 
-                    pending_events.push(event);
-                    sleep.as_mut().reset(tokio::time::Instant::now() + debounce_duration);
-                    timer_active = true;
+                    // WASM Plugin Filtering (Roadmap)
+                    let mut filtered_paths = Vec::new();
+                    for path in &event.paths {
+                        if plugin_engine.should_process(&path.to_string_lossy()) {
+                            filtered_paths.push(path.clone());
+                        }
+                    }
+
+                    if !filtered_paths.is_empty() {
+                        let mut filtered_event = event.clone();
+                        filtered_event.paths = filtered_paths;
+                        pending_events.push(filtered_event);
+                        sleep.as_mut().reset(tokio::time::Instant::now() + debounce_duration);
+                        timer_active = true;
+                    }
                 }
             }
             _ = &mut sleep, if timer_active => {

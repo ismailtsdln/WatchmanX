@@ -38,9 +38,8 @@ impl WatchmanService for MyWatchmanService {
         let config = self.config.clone();
         let executor = self.executor.clone();
 
-        if let Some(task_def) = config.tasks.get(&task_name) {
+        if let Some(task_def) = config.tasks.get(&task_name).cloned() {
             info!("Remote trigger for task: {}", task_name);
-            let task_def = task_def.clone();
             let name = task_name.clone();
 
             tokio::spawn(async move {

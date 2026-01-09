@@ -2,6 +2,7 @@ mod cli;
 mod config;
 mod executor;
 mod logger;
+mod plugins;
 mod rpc;
 mod server;
 mod watcher;
@@ -51,10 +52,11 @@ async fn main() -> Result<()> {
     let token = tokio_util::sync::CancellationToken::new();
     let cloned_token = token.clone();
 
+    let signal_token = cloned_token.clone();
     tokio::spawn(async move {
         if let Ok(_) = tokio::signal::ctrl_c().await {
             info!("{}", "Shutting down gracefully...".yellow());
-            cloned_token.cancel();
+            signal_token.cancel();
         }
     });
 

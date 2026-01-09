@@ -28,6 +28,7 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 futures-util = "0.3"
 tonic = "0.12"
 prost = "0.13"
+wasmer = "4.3"
 
 [build-dependencies]
 tonic-build = "0.12"

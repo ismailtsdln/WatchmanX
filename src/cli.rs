@@ -28,6 +28,10 @@ pub struct WatchArgs {
     /// Paths to watch
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
+
+    /// Optional WASM plugin for event filtering
+    #[arg(short, long)]
+    pub plugin: Option<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]
