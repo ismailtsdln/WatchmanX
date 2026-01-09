@@ -23,10 +23,12 @@ pub struct ServerState {
     pub tx: broadcast::Sender<DashboardEvent>,
 }
 
+use axum::response::Html;
 use tower_http::services::ServeDir;
 
 pub async fn start(state: Arc<ServerState>) {
     let app = Router::new()
+        .route("/", get(dashboard_handler))
         .route("/events", get(sse_handler))
         .fallback_service(ServeDir::new("assets"))
         .with_state(state);
@@ -34,6 +36,12 @@ pub async fn start(state: Arc<ServerState>) {
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     info!("Web Dashboard available at http://localhost:8080");
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn dashboard_handler() -> Html<String> {
+    let content = std::fs::read_to_string("assets/index.html")
+        .unwrap_or_else(|_| "Dashboard UI not found".to_string());
+    Html(content)
 }
 
 async fn sse_handler(
