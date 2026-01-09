@@ -2,6 +2,7 @@ mod cli;
 mod config;
 mod executor;
 mod logger;
+mod rpc;
 mod server;
 mod watcher;
 
@@ -30,6 +31,23 @@ async fn main() -> Result<()> {
         server::start(dashboard_state).await;
     });
 
+    // Initialize gRPC (Roadmap)
+    // We'll need a way to share the current executor/config
+    // For now, let's create a shared executor
+    let global_executor = std::sync::Arc::new(executor::Executor::new(10));
+    let initial_config = std::sync::Arc::new(config::load_config(None).await.unwrap_or_default());
+
+    let rpc_service = rpc::MyWatchmanService {
+        executor: global_executor.clone(),
+        config: initial_config.clone(),
+    };
+
+    tokio::spawn(async move {
+        if let Err(e) = rpc::start(rpc_service).await {
+            error!("gRPC Server error: {:?}", e);
+        }
+    });
+
     let token = tokio_util::sync::CancellationToken::new();
     let cloned_token = token.clone();
 
@@ -44,8 +62,8 @@ async fn main() -> Result<()> {
         let result = match args.command.clone() {
             cli::Commands::Watch(cmd) => {
                 tokio::select! {
-                    res = watcher::run(cmd.clone(), token.clone(), server_tx.clone()) => res,
-                    _ = token.cancelled() => Ok(()),
+                    res = watcher::run(cmd.clone(), cloned_token.clone(), server_tx.clone(), global_executor.clone()) => res,
+                    _ = cloned_token.cancelled() => Ok(()),
                 }
             }
             cli::Commands::Task(cmd) => executor::manage_tasks(cmd.clone()).await,

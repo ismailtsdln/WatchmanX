@@ -4,6 +4,7 @@ use glob::Pattern;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc::{channel as tokio_channel, Receiver};
 use tracing::{debug, error, info, warn};
@@ -16,6 +17,7 @@ pub async fn run(
     args: WatchArgs,
     token: tokio_util::sync::CancellationToken,
     server_tx: tokio::sync::broadcast::Sender<crate::server::DashboardEvent>,
+    executor: Arc<Executor>,
 ) -> Result<()> {
     // Load config
     let config = load_config(None).await?;
@@ -24,12 +26,10 @@ pub async fn run(
         config.watch.len()
     );
 
+    // Executor is passed from main
     // Identify config path to watch for hot-reload
     // For simplicity, let's assume it's one of the defaults if not specified
     let config_path = PathBuf::from("watchmanx.yml"); // Simplified for now
-
-    // Initialize Executor
-    let executor = Executor::new(5);
 
     info!("Starting file watcher on paths: {:?}", args.paths);
 
