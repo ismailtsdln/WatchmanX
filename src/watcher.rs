@@ -13,7 +13,7 @@ use crate::cli::WatchArgs;
 use crate::config::{load_config, Config as AppConfig};
 use crate::executor::Executor;
 
-pub async fn run(args: WatchArgs) -> Result<()> {
+pub async fn run(args: WatchArgs, token: tokio_util::sync::CancellationToken) -> Result<()> {
     // Load config
     let config = load_config(None).await?;
     info!(
@@ -21,8 +21,12 @@ pub async fn run(args: WatchArgs) -> Result<()> {
         config.watch.len()
     );
 
+    // Identify config path to watch for hot-reload
+    // For simplicity, let's assume it's one of the defaults if not specified
+    let config_path = PathBuf::from("watchmanx.yml"); // Simplified for now
+
     // Initialize Executor
-    let executor = Executor::new(5); // TODO: Make configurable
+    let executor = Executor::new(5);
 
     info!("Starting file watcher on paths: {:?}", args.paths);
 
@@ -43,6 +47,15 @@ pub async fn run(args: WatchArgs) -> Result<()> {
         }
     }
 
+    // Also watch config file
+    if config_path.exists() {
+        watcher.watch(&config_path, RecursiveMode::NonRecursive)?;
+        info!(
+            "Watching config for hot-reload: {}",
+            format!("{:?}", config_path).bright_magenta()
+        );
+    }
+
     tokio::task::spawn_blocking(move || {
         while let Ok(res) = std_rx.recv() {
             match res {
@@ -54,40 +67,55 @@ pub async fn run(args: WatchArgs) -> Result<()> {
         }
     });
 
-    process_events(&mut rx, &config, &executor).await;
+    // We need to return an error if RELOAD is needed
+    let reload_token = tokio_util::sync::CancellationToken::new();
+    let res = process_events(&mut rx, &config, &executor, &config_path, &reload_token).await;
 
-    Ok(())
+    if reload_token.is_cancelled() {
+        return Err(anyhow::anyhow!("RELOAD_CONFIG"));
+    }
+
+    res
 }
 
-async fn process_events(rx: &mut Receiver<Event>, config: &AppConfig, executor: &Executor) {
-    let mut debounce_timer = None;
+async fn process_events(
+    rx: &mut Receiver<Event>,
+    config: &AppConfig,
+    executor: &Executor,
+    config_path: &PathBuf,
+    reload_token: &tokio_util::sync::CancellationToken,
+) -> Result<()> {
     let mut pending_events = Vec::new();
     let debounce_duration = Duration::from_millis(500);
+
+    let sleep = tokio::time::sleep(debounce_duration);
+    tokio::pin!(sleep);
+    let mut timer_active = false;
 
     loop {
         tokio::select! {
             Some(event) = rx.recv() => {
                 if !event.kind.is_access() {
+                    // Check if config file was changed
+                    if event.paths.iter().any(|p| p.ends_with(config_path)) {
+                        reload_token.cancel();
+                        return Ok(());
+                    }
+
                     pending_events.push(event);
-                    // Reset or start timer
-                    debounce_timer = Some(tokio::time::sleep(debounce_duration));
+                    sleep.as_mut().reset(tokio::time::Instant::now() + debounce_duration);
+                    timer_active = true;
                 }
             }
-            _ = async {
-                if let Some(ref mut timer) = debounce_timer {
-                    timer.await;
-                } else {
-                    futures::future::pending::<()>().await;
-                }
-            }, if debounce_timer.is_some() => {
-                // Timer expired, process all pending events
+            _ = &mut sleep, if timer_active => {
+                timer_active = false;
                 let events = std::mem::take(&mut pending_events);
-                debounce_timer = None;
                 handle_batched_events(events, config, executor).await;
             }
             else => break,
         }
     }
+    Ok(())
 }
 
 async fn handle_batched_events(events: Vec<Event>, config: &AppConfig, executor: &Executor) {
@@ -95,10 +123,10 @@ async fn handle_batched_events(events: Vec<Event>, config: &AppConfig, executor:
         std::collections::HashMap::new();
 
     for event in events {
-        for path in event.paths {
+        for path in &event.paths {
             for (idx, rule) in config.watch.iter().enumerate() {
-                if matches_rule(&path, rule) {
-                    rule_triggers.entry(idx).or_default().push(path);
+                if matches_rule(path, rule) {
+                    rule_triggers.entry(idx).or_default().push(path.clone());
                 }
             }
         }

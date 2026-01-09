@@ -8,7 +8,7 @@ use anyhow::Result;
 use clap::Parser;
 use cli::Cli;
 use colored::Colorize;
-use tracing::info;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -18,12 +18,46 @@ async fn main() -> Result<()> {
     let args = Cli::parse();
     info!("Starting {}", "WatchmanX".bright_cyan().bold());
 
-    match args.command {
-        cli::Commands::Watch(cmd) => watcher::run(cmd).await?,
-        cli::Commands::Task(cmd) => executor::manage_tasks(cmd).await?,
-        cli::Commands::Run(cmd) => executor::run_once(cmd).await?,
-        cli::Commands::Config(cmd) => config::manage(cmd).await?,
-        cli::Commands::Debug(cmd) => logger::debug_info(cmd).await?,
+    let token = tokio_util::sync::CancellationToken::new();
+    let cloned_token = token.clone();
+
+    tokio::spawn(async move {
+        if let Ok(_) = tokio::signal::ctrl_c().await {
+            info!("{}", "Shutting down gracefully...".yellow());
+            cloned_token.cancel();
+        }
+    });
+
+    loop {
+        let result = match args.command {
+            cli::Commands::Watch(cmd) => {
+                tokio::select! {
+                    res = watcher::run(cmd.clone(), token.clone()) => res,
+                    _ = token.cancelled() => Ok(()),
+                }
+            }
+            cli::Commands::Task(cmd) => executor::manage_tasks(cmd.clone()).await,
+            cli::Commands::Run(cmd) => executor::run_once(cmd.clone()).await,
+            cli::Commands::Config(cmd) => config::manage(cmd.clone()).await,
+            cli::Commands::Debug(cmd) => logger::debug_info(cmd.clone()).await,
+        };
+
+        if let Err(e) = result {
+            // Check if it's a reload signal
+            if e.to_string().contains("RELOAD_CONFIG") {
+                info!(
+                    "{}",
+                    "Config change detected. Reloading..."
+                        .bright_magenta()
+                        .bold()
+                );
+                continue;
+            }
+            error!("Error: {:?}", e);
+            break;
+        } else {
+            break;
+        }
     }
 
     Ok(())

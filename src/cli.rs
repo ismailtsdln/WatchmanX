@@ -23,32 +23,32 @@ pub enum Commands {
     Debug(DebugArgs),
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct WatchArgs {
     /// Paths to watch
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct TaskArgs {
     /// Task operation
     pub operation: String, // Placeholder
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct RunArgs {
     /// Task name to run
     pub task_name: String,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ConfigArgs {
     /// Config operation
     pub operation: Option<String>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct DebugArgs {
     /// Enable verbose debug output
     #[arg(short, long)]
