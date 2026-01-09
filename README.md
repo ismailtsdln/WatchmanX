@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/Users/ismailtasdelen/.gemini/antigravity/brain/6e01e81a-1cc9-441f-8e56-481942d92d6a/watchmanx_logo_v1_1767958634561.png" width="200" alt="WatchmanX Logo">
+  <img src="./assets/logo.png" width="200" alt="WatchmanX Logo">
 </p>
 
 <h1 align="center">WatchmanX</h1>
