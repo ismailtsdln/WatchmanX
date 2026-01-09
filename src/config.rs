@@ -6,13 +6,13 @@ use tokio::fs;
 
 use crate::cli::ConfigArgs;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub watch: Vec<WatchRule>,
     pub tasks: HashMap<String, TaskDefinition>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WatchRule {
     pub path: PathBuf,
     pub recursive: bool,
@@ -21,7 +21,7 @@ pub struct WatchRule {
     pub tasks: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TaskDefinition {
     pub command: String,
     pub args: Vec<String>,
