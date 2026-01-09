@@ -33,9 +33,20 @@ pub async fn start(state: Arc<ServerState>) {
         .fallback_service(ServeDir::new("assets"))
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    let listener = match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
+        Ok(l) => l,
+        Err(e) => {
+            error!(
+                "Failed to bind Web Dashboard to port 8080: {}. Is it already in use?",
+                e
+            );
+            return;
+        }
+    };
     info!("Web Dashboard available at http://localhost:8080");
-    axum::serve(listener, app).await.unwrap();
+    if let Err(e) = axum::serve(listener, app).await {
+        error!("Web Dashboard server error: {:?}", e);
+    }
 }
 
 async fn dashboard_handler() -> Html<String> {

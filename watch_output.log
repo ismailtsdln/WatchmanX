@@ -1,0 +1,19 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/watchmanx watch test_watch`
+
+    __      __         _         _                               __   __
+    \ \    / /        | |       | |                              \ \ / /
+     \ \  / /_ _ _ ___| |__  _ _| | __ _ _ _  __  __   _____  __ \   / 
+      \ \/ / _` | ' __| '_ \| ' | |/ _` | ' \|  \/  | / _ \ \/ / /   \ 
+       \  / (_| | |   | | | | | | | (_| | | | | |  | | | (_| >  < / / \ \
+        \/ \__,_|_|   |_| |_|_| |_|\__,_|_| |_|_|  |_| \__/_/\_\/_/   \_\
+    
+    Advanced File Watching & Automation v0.1.0
+
+[2m2026-01-09T11:52:49.082313Z[0m [32m INFO[0m Starting WatchmanX
+
+thread 'tokio-runtime-worker' (19795111) panicked at src/server.rs:36:72:
+called `Result::unwrap()` on an `Err` value: Os { code: 48, kind: AddrInUse, message: "Address already in use" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2m2026-01-09T11:52:49.087199Z[0m [32m INFO[0m gRPC Server listening on 0.0.0.0:50051
+[2m2026-01-09T11:52:49.088050Z[0m [31mERROR[0m Error: watch[0]: missing field `ignore` at line 2 column 5

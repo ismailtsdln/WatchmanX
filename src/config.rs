@@ -18,6 +18,7 @@ pub struct WatchRule {
     pub path: PathBuf,
     pub recursive: bool,
     pub patterns: Vec<String>,
+    #[serde(default)]
     pub ignore: Vec<String>,
     pub tasks: Vec<String>,
 }

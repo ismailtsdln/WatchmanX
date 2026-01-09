@@ -1,16 +1,13 @@
 watch:
-  - path: "."
+  - path: test_watch
     recursive: true
     patterns:
       - "*.txt"
-    ignore:
-      - "triggered.txt"
     tasks:
-      - "hello"
-
+      - hello
 tasks:
   hello:
-    command: "sh"
+    command: echo
     args:
-      - "-c"
-      - "echo 'Hello from WatchmanX' && touch triggered.txt"
+      - "Hello from WatchmanX!"
+max_concurrent_tasks: 5
