@@ -7,14 +7,16 @@ mod watcher;
 use anyhow::Result;
 use clap::Parser;
 use cli::Cli;
+use colored::Colorize;
 use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     logger::init();
-    
+    logger::print_banner();
+
     let args = Cli::parse();
-    info!("Starting WatchmanX");
+    info!("Starting {}", "WatchmanX".bright_cyan().bold());
 
     match args.command {
         cli::Commands::Watch(cmd) => watcher::run(cmd).await?,
