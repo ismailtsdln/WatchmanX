@@ -32,15 +32,15 @@ async fn main() -> Result<()> {
         server::start(dashboard_state).await;
     });
 
-    // Initialize gRPC (Roadmap)
-    // We'll need a way to share the current executor/config
-    // For now, let's create a shared executor
-    let global_executor = std::sync::Arc::new(executor::Executor::new(10));
-    let initial_config = std::sync::Arc::new(config::load_config(None).await.unwrap_or_default());
+    // Initialize gRPC and Shared State
+    let initial_config_raw = config::load_config(None).await.unwrap_or_default();
+    let max_concurrency = initial_config_raw.max_concurrent_tasks.unwrap_or(5);
+    let global_executor = std::sync::Arc::new(executor::Executor::new(max_concurrency));
+    let shared_config = std::sync::Arc::new(tokio::sync::RwLock::new(initial_config_raw));
 
     let rpc_service = rpc::MyWatchmanService {
         executor: global_executor.clone(),
-        config: initial_config.clone(),
+        config: shared_config.clone(),
     };
 
     tokio::spawn(async move {
@@ -61,6 +61,13 @@ async fn main() -> Result<()> {
     });
 
     loop {
+        // Load config and update shared state if it's a reload
+        let current_config = config::load_config(None).await.unwrap_or_default();
+        {
+            let mut writer = shared_config.write().await;
+            *writer = current_config.clone();
+        }
+
         let result = match args.command.clone() {
             cli::Commands::Watch(cmd) => {
                 tokio::select! {

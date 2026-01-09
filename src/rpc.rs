@@ -14,7 +14,7 @@ use crate::executor::Executor;
 
 pub struct MyWatchmanService {
     pub executor: Arc<Executor>,
-    pub config: Arc<Config>,
+    pub config: Arc<tokio::sync::RwLock<Config>>,
 }
 
 #[tonic::async_trait]
@@ -23,10 +23,11 @@ impl WatchmanService for MyWatchmanService {
         &self,
         _request: Request<Empty>,
     ) -> Result<Response<StatusResponse>, Status> {
+        let config = self.config.read().await;
         Ok(Response::new(StatusResponse {
             version: "0.1.0".to_string(),
-            rules_count: self.config.watch.len() as u32,
-            tasks_count: self.config.tasks.len() as u32,
+            rules_count: config.watch.len() as u32,
+            tasks_count: config.tasks.len() as u32,
         }))
     }
 
@@ -35,7 +36,7 @@ impl WatchmanService for MyWatchmanService {
         request: Request<TriggerRequest>,
     ) -> Result<Response<TriggerResponse>, Status> {
         let task_name = request.into_inner().task_name;
-        let config = self.config.clone();
+        let config = self.config.read().await;
         let executor = self.executor.clone();
 
         if let Some(task_def) = config.tasks.get(&task_name).cloned() {

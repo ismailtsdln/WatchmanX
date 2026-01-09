@@ -10,6 +10,7 @@ use crate::cli::ConfigArgs;
 pub struct Config {
     pub watch: Vec<WatchRule>,
     pub tasks: HashMap<String, TaskDefinition>,
+    pub max_concurrent_tasks: Option<usize>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -33,6 +34,7 @@ impl Default for Config {
         Self {
             watch: vec![],
             tasks: HashMap::new(),
+            max_concurrent_tasks: Some(5),
         }
     }
 }

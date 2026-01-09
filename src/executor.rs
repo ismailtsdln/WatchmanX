@@ -9,9 +9,6 @@ use crate::cli::{RunArgs, TaskArgs};
 use crate::config::load_config;
 use crate::config::TaskDefinition;
 
-// Global concurrency limit - could be configurable
-const MAX_CONCURRENT_TASKS: usize = 5;
-
 pub struct Executor {
     semaphore: Arc<Semaphore>,
 }
@@ -85,7 +82,7 @@ pub async fn run_once(args: RunArgs) -> Result<()> {
     let config = load_config(None).await?;
 
     if let Some(task) = config.tasks.get(&args.task_name) {
-        let executor = Executor::new(MAX_CONCURRENT_TASKS);
+        let executor = Executor::new(5);
         executor
             .run_task(&args.task_name, task, std::collections::HashMap::new())
             .await?;
